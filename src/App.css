@@ -1,0 +1,50 @@
+html {
+    font-size: 62.5%;
+}
+
+body {
+    font-size: 1.6rem;
+    font-family: Verdana, sans-serif;
+}
+
+.points {
+    margin-bottom: 4rem;
+}
+
+canvas {
+    border: 1rem solid rebeccapurple;
+}
+
+.mobile-buttons {
+    display: grid;
+    margin-top: 4rem;
+    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 5rem);
+
+    @media (min-width: 1024px) {
+        display: none;
+    }
+}
+
+.button {
+    min-width: 8rem;
+    border: .2rem solid rebeccapurple;
+    border-radius: .2rem;
+    background-color: white;
+
+    &:hover, &:active {
+        background-color: lightgray;
+    }
+
+}
+
+#up {
+    grid-row: 1/2;
+    grid-column: 2/3;
+}
+
+#left, #down, #right {
+    grid-row: 2/3;
+}
+
