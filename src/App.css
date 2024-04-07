@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 html {
     font-size: 62.5%;
 }
@@ -8,11 +12,22 @@ p {
 
 body {
     font-size: 1.6rem;
-    font-family: Verdana, sans-serif;
+    font-family: Tahoma, sans-serif;
+    margin: 0;
+    background-color: black;
+    color: white;
 }
 
 canvas {
     border: 1rem solid rebeccapurple;
+}
+
+.app {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .container {
@@ -25,24 +40,45 @@ canvas {
     flex-direction: column;
 }
 
-.mobile-buttons {
+.actions {
     display: grid;
     margin-top: 2rem;
     gap: 1rem;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(2, 5rem);
-
-    @media (min-width: 1024px) {
-        display: none;
-    }
 }
 
 .button {
-    min-width: 8rem;
+    min-width: 10rem;
+    padding: 1.5rem 3rem;
     color: white;
-    border: none;
     border-radius: .2rem;
     background-color: rebeccapurple;
+    cursor: pointer;
+    font-size: 1.6rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 200ms ease;
+    border: none;
+
+    &:active {
+        color: white;
+        background-color: hsl(270, 67%, 35%);
+    }
+
+    svg {
+        font-size: 2rem;
+        pointer-events: none;
+    }
+}
+
+.button--danger {
+    background-color: red;
+
+    &:active {
+        background-color: darkred;
+    }
 }
 
 #up {
@@ -52,5 +88,13 @@ canvas {
 
 #left, #down, #right {
     grid-row: 2/3;
+}
+
+.end-results {
+    margin-top: 10rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
 }
 

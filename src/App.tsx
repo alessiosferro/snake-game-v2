@@ -1,9 +1,11 @@
 import './App.css';
 import {MouseEventHandler, useEffect, useRef, useState} from "react";
-
-const gridSize = 300;
-const cellsCount = 10;
-const FPS = 7;
+import {
+    ArrowBackIcon,
+    ArrowDownIcon,
+    ArrowForwardIcon,
+    ArrowUpIcon
+} from "@chakra-ui/icons";
 
 function App() {
     const canvas = useRef<HTMLCanvasElement | null>(null);
@@ -12,19 +14,8 @@ function App() {
     const [points, setPoints] = useState(0);
     const [showEnd, setShowEnd] = useState(false);
 
-    const playerState = useRef({
-        parts: [{
-            x: 5,
-            y: 5
-        }],
-        direction: 'right',
-        isFruitEaten: false,
-    });
-
-    const gameState = useRef({
-        fruitPosition: getFruitPosition(),
-        isEnd: false,
-    });
+    const playerState = useRef(initialPlayerState);
+    const gameState = useRef(initialGameState);
 
     const updateFruitPosition = () => {
         gameState.current = {
@@ -35,6 +26,7 @@ function App() {
 
     const updatePlayerDirection = (direction: 'up' | 'left' | 'right' | 'down') => {
         if (
+            playerState.current.direction === direction ||
             playerState.current.direction === 'left' && direction === 'right' ||
             playerState.current.direction === 'right' && direction === 'left' ||
             playerState.current.direction === 'up' && direction === 'down' ||
@@ -84,22 +76,22 @@ function App() {
 
         if (!canvasContext) return;
 
-        const drawGrid = () => {
-            for (let i = 0; i < cellsCount; i++) {
-                for (let j = 0; j < cellsCount; j++) {
-                    canvasContext.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
-                }
-            }
-        }
+        // const drawGrid = () => {
+        //     for (let i = 0; i < cellsCount; i++) {
+        //         for (let j = 0; j < cellsCount; j++) {
+        //             canvasContext.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
+        //         }
+        //     }
+        // }
 
         const drawPlayer = () => {
-            const { parts } = playerState.current;
+            const {parts} = playerState.current;
 
             for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
 
                 const isHead = i === 0;
-                canvasContext.fillStyle = (isHead && parts.length > 1) ? 'red' : 'black';
+                canvasContext.fillStyle = (isHead && parts.length > 1) ? 'rebeccapurple' : 'white';
                 canvasContext.fillRect(part.x * cellSize, part.y * cellSize, cellSize, cellSize);
             }
         }
@@ -239,14 +231,15 @@ function App() {
 
         const loop = () => {
             canvasContext.clearRect(0, 0, gridSize, gridSize);
-            canvasContext.fillStyle = 'black';
-            canvasContext.strokeStyle = 'black';
+            canvasContext.fillStyle = 'white';
+            canvasContext.strokeStyle = 'white';
 
-            drawGrid();
-            drawPlayer();
-            drawFruit();
             movePlayer();
             eatFruit();
+
+            // drawGrid();
+            drawPlayer();
+            drawFruit();
 
             if (gameState.current.isEnd) {
                 canvasContext.clearRect(0, 0, gridSize, gridSize);
@@ -274,11 +267,13 @@ function App() {
             clearTimeout(timeoutId.current);
             document.removeEventListener('keydown', handleKeyDown);
         }
-    }, [showEnd, game]);
+    }, [showEnd]);
 
     const handleReset = () => {
         setPoints(0);
         setShowEnd(false);
+        gameState.current = initialGameState;
+        playerState.current = initialPlayerState;
     }
 
     const handleChangeDirectionClick: MouseEventHandler = (e) => {
@@ -308,49 +303,79 @@ function App() {
     }
 
     return (
-        <div className="container">
-            <h1 style={{ margin: 0, textTransform: 'uppercase' }}>Snake</h1>
+        <div className="app">
+            <div className="container">
+                {!showEnd && (
+                    <p>
+                        Punti: <strong>{points}</strong>
+                    </p>
+                )}
 
-            <p>Manuel è un figo (w l'Armenia)</p>
+                {showEnd && (
+                    <div className="end-results">
+                        <p style={{ fontWeight: "bold", fontSize: "8rem", color: "red" }}>SEI MORTO</p>
+                        <p style={{margin: "3rem 0 5rem", lineHeight: "2.4rem" }}>Anche mia sorella saprebbe fare <strong>{points}</strong> punti. Impegnati di più per favore, fai pena.</p>
+                        <button className="button button--danger" onClick={handleReset}>Riprova</button>
+                    </div>)}
 
-            {!showEnd && (
-                <p>
-                    Punti: <strong>{points}</strong>
-                </p>
-            )}
+                {!showEnd && (
+                    <>
+                        <canvas
+                            ref={canvas}
+                            height={gridSize}
+                            width={gridSize}
+                        />
 
-            {showEnd && (
-                <>
-                    <p>Peccato, hai perso!</p>
-                    <p>In totale hai realizzato {points} punti!</p>
-                    <button onClick={handleReset}>Riprova</button>
-                </>)}
-
-            {!showEnd && <canvas
-                ref={canvas}
-                height={gridSize}
-                width={gridSize}
-            />}
-
-            <div className="mobile-buttons" onClick={handleChangeDirectionClick}>
-                <button id="up" className="button">UP</button>
-                <button id="left" className="button">LEFT</button>
-                <button id="down" className="button">DOWN</button>
-                <button id="right" className="button">RIGHT</button>
+                        <div className="actions" onClick={handleChangeDirectionClick}>
+                            <button id="up" className="button">
+                                <ArrowUpIcon />
+                            </button>
+                            <button id="left" className="button">
+                                <ArrowBackIcon />
+                            </button>
+                            <button id="down" className="button">
+                                <ArrowDownIcon />
+                            </button>
+                            <button id="right" className="button">
+                                <ArrowForwardIcon />
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
+
+            <p style={{ marginBottom: "2rem" }}>Manuel è un figo (w l'Armenia)</p>
         </div>
     )
 }
 
 export default App
 
-const getFruitPosition = () => {
+const gridSize = 300;
+const cellsCount = 10;
+const FPS = 6;
+
+const initialPlayerState = {
+    parts: [{
+        x: 5,
+        y: 5
+    }],
+    direction: 'right',
+    isFruitEaten: false,
+}
+
+const initialGameState = {
+    fruitPosition: getFruitPosition(),
+    isEnd: false,
+}
+
+function getFruitPosition() {
     return {
         x: getRandomPosition(),
         y: getRandomPosition()
     }
 }
 
-const getRandomPosition = () => {
+function getRandomPosition() {
     return Math.floor(Math.random() * 10);
 }
