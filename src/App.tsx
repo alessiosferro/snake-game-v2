@@ -17,6 +17,18 @@ function App() {
     const playerState = useRef(initialPlayerState);
     const gameState = useRef(initialGameState);
 
+    const dingRef = useRef<HTMLAudioElement | null>(null);
+
+    const getFruitPosition = () => {
+        let fruitPosition = generateCoords();
+
+        if (playerState.current.parts.find(part => part.x === fruitPosition.x && part.y === fruitPosition.y)) {
+            fruitPosition = getFruitPosition();
+        }
+
+        return fruitPosition;
+    }
+
     const updateFruitPosition = () => {
         gameState.current = {
             ...gameState.current,
@@ -26,6 +38,7 @@ function App() {
 
     const updatePlayerDirection = (direction: 'up' | 'left' | 'right' | 'down') => {
         if (
+            playerState.current.changedDirection ||
             playerState.current.direction === direction ||
             playerState.current.direction === 'left' && direction === 'right' ||
             playerState.current.direction === 'right' && direction === 'left' ||
@@ -38,7 +51,8 @@ function App() {
         playerState.current = {
             ...playerState.current,
             parts: [...playerState.current.parts],
-            direction
+            direction,
+            changedDirection: true
         };
     }
 
@@ -91,8 +105,40 @@ function App() {
                 const part = parts[i];
 
                 const isHead = i === 0;
-                canvasContext.fillStyle = (isHead && parts.length > 1) ? 'rebeccapurple' : 'white';
+
+                canvasContext.strokeStyle = 'white';
+                canvasContext.fillStyle = isHead ? 'rebeccapurple' : 'green';
                 canvasContext.fillRect(part.x * cellSize, part.y * cellSize, cellSize, cellSize);
+
+                if (isHead) {
+                    canvasContext.fillStyle = 'black';
+
+                    switch (playerState.current.direction) {
+                        case "right": {
+                            canvasContext.fillRect(part.x * cellSize + 5, part.y * cellSize + 5, 8, 5);
+                            canvasContext.fillRect(part.x * cellSize + 5, part.y * cellSize + 20, 8, 5);
+                            break;
+                        }
+
+                        case "left": {
+                            canvasContext.fillRect(part.x * cellSize + 15, part.y * cellSize + 5, 8, 5);
+                            canvasContext.fillRect(part.x * cellSize + 15, part.y * cellSize + 20, 8, 5);
+                            break;
+                        }
+
+                        case "up": {
+                            canvasContext.fillRect(part.x * cellSize + 5, part.y * cellSize + 15, 5, 8);
+                            canvasContext.fillRect(part.x * cellSize + 20, part.y * cellSize + 15, 5, 8);
+                            break;
+                        }
+
+                        case "down": {
+                            canvasContext.fillRect(part.x * cellSize + 5, part.y * cellSize + 5, 5, 8);
+                            canvasContext.fillRect(part.x * cellSize + 20, part.y * cellSize + 5, 5, 8);
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -186,7 +232,7 @@ function App() {
         const drawFruit = () => {
             const {x, y} = gameState.current.fruitPosition;
 
-            canvasContext.fillStyle = 'green';
+            canvasContext.fillStyle = 'gold';
             canvasContext.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         }
 
@@ -215,6 +261,7 @@ function App() {
                     parts: [...playerState.current.parts],
                     isFruitEaten: false
                 };
+
                 return;
             }
 
@@ -227,12 +274,23 @@ function App() {
                 parts: [...playerState.current.parts],
                 isFruitEaten: true
             };
+
+            if (!dingRef.current) return;
+
+            dingRef.current.volume = .1;
+            dingRef.current?.play();
         }
 
         const loop = () => {
             canvasContext.clearRect(0, 0, gridSize, gridSize);
             canvasContext.fillStyle = 'white';
             canvasContext.strokeStyle = 'white';
+
+            playerState.current = {
+                ...playerState.current,
+                parts: [...playerState.current.parts],
+                changedDirection: false
+            }
 
             movePlayer();
             eatFruit();
@@ -302,6 +360,37 @@ function App() {
         }
     }
 
+    const getFinalMessage = () => {
+        if (points < 50) {
+            return <>
+                Anche mia sorella saprebbe
+                fare <strong>{points}</strong> punti. Impegnati di più per favore, fai pena.
+            </>
+        }
+
+        if (points < 100) {
+            return <>
+                Discreto, ma hai ancora molto da migliorare. Hai fatto solamente <strong>{points}</strong>. Impegnati!
+            </>
+        }
+
+        if (points < 150) {
+            return  <>
+                Stai migliorando, ma sei ancora una mezza sega e lo sai bene. Puoi fare meglio di <strong>{points}</strong> punti.
+            </>
+        }
+
+        if (points < 200) {
+            return <>
+                Complimenti, forse inizi a meritare il mio rispetto, hai raccolto <strong>{points}</strong> punti!
+            </>
+        }
+
+        return <>
+            Sei un pro ormai, cacchio hai fatto <strong>{points}</strong>, cosa aspetti? Vai ad iscriverti ai tornei esport di snake! Ah aspetta, non esistono.
+        </>
+    }
+
     return (
         <div className="app">
             <div className="container">
@@ -313,8 +402,8 @@ function App() {
 
                 {showEnd && (
                     <div className="end-results">
-                        <p style={{ fontWeight: "bold", fontSize: "8rem", color: "red" }}>SEI MORTO</p>
-                        <p style={{margin: "3rem 0 5rem", lineHeight: "2.4rem" }}>Anche mia sorella saprebbe fare <strong>{points}</strong> punti. Impegnati di più per favore, fai pena.</p>
+                        <p style={{fontWeight: "bold", fontSize: "8rem", color: "red"}}>SEI MORTO</p>
+                        <p style={{margin: "3rem 0 5rem", lineHeight: "2.4rem"}}>{getFinalMessage()}</p>
                         <button className="button button--danger" onClick={handleReset}>Riprova</button>
                     </div>)}
 
@@ -328,23 +417,28 @@ function App() {
 
                         <div className="actions" onClick={handleChangeDirectionClick}>
                             <button id="up" className="button">
-                                <ArrowUpIcon />
+                                <ArrowUpIcon/>
                             </button>
                             <button id="left" className="button">
-                                <ArrowBackIcon />
+                                <ArrowBackIcon/>
                             </button>
                             <button id="down" className="button">
-                                <ArrowDownIcon />
+                                <ArrowDownIcon/>
                             </button>
                             <button id="right" className="button">
-                                <ArrowForwardIcon />
+                                <ArrowForwardIcon/>
                             </button>
                         </div>
                     </>
                 )}
             </div>
 
-            <p style={{ marginBottom: "2rem" }}>Manuel è un figo (w l'Armenia)</p>
+            <audio ref={dingRef}>
+                <source src="beep.mp3" type="audio/mpeg"/>
+                Your browser does not support the audio element.
+            </audio>
+
+            <p style={{marginBottom: "2rem"}}>Manuel è un figo (w l'Armenia)</p>
         </div>
     )
 }
@@ -360,16 +454,17 @@ const initialPlayerState = {
         x: 5,
         y: 5
     }],
+    changedDirection: false,
     direction: 'right',
     isFruitEaten: false,
 }
 
 const initialGameState = {
-    fruitPosition: getFruitPosition(),
+    fruitPosition: generateCoords(),
     isEnd: false,
 }
 
-function getFruitPosition() {
+function generateCoords() {
     return {
         x: getRandomPosition(),
         y: getRandomPosition()
