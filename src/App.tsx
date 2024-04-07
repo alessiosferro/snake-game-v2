@@ -311,6 +311,8 @@ function App() {
         <div style={{ marginTop: "4rem", padding: "0 2rem", display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
             <h1 style={{ margin: 0, textTransform: 'uppercase' }}>Snake</h1>
 
+            <p>Manuel è un figo (w l'Armenia)</p>
+
             {!showEnd && (
                 <p className="points">
                     Player points: <strong>{points}</strong>
