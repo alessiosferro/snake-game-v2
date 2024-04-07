@@ -12,42 +12,42 @@ function App() {
     const [points, setPoints] = useState(0);
     const [showEnd, setShowEnd] = useState(false);
 
-    let playerState = {
+    const playerState = useRef({
         parts: [{
             x: 5,
             y: 5
         }],
         direction: 'right',
         isFruitEaten: false,
-    };
+    });
 
-    let gameState = {
+    const gameState = useRef({
         fruitPosition: getFruitPosition(),
         isEnd: false,
-    }
+    });
 
     const updateFruitPosition = () => {
-        gameState = {
-            ...gameState,
+        gameState.current = {
+            ...gameState.current,
             fruitPosition: getFruitPosition()
         }
     }
 
     const updatePlayerDirection = (direction: 'up' | 'left' | 'right' | 'down') => {
         if (
-            playerState.direction === 'left' && direction === 'right' ||
-            playerState.direction === 'right' && direction === 'left' ||
-            playerState.direction === 'up' && direction === 'down' ||
-            playerState.direction === 'down' && direction === 'up'
+            playerState.current.direction === 'left' && direction === 'right' ||
+            playerState.current.direction === 'right' && direction === 'left' ||
+            playerState.current.direction === 'up' && direction === 'down' ||
+            playerState.current.direction === 'down' && direction === 'up'
         ) {
             return;
         }
 
-        playerState = {
-            ...playerState,
-            parts: [...playerState.parts],
+        playerState.current = {
+            ...playerState.current,
+            parts: [...playerState.current.parts],
             direction
-        }
+        };
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,7 +93,7 @@ function App() {
         }
 
         const drawPlayer = () => {
-            const { parts } = playerState;
+            const { parts } = playerState.current;
 
             for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
@@ -105,20 +105,20 @@ function App() {
         }
 
         const detectCollision = () => {
-            const [head, ...parts] = playerState.parts;
+            const [head, ...parts] = playerState.current.parts;
 
             return !!parts.find(p => p.x === head.x && p.y === head.y);
         }
 
         const endGame = () => {
-            gameState = {
-                ...gameState,
+            gameState.current = {
+                ...gameState.current,
                 isEnd: true
             }
         }
 
         const getUpdatedHead = (part: { y: number, x: number }) => {
-            switch (playerState.direction) {
+            switch (playerState.current.direction) {
                 case "up": {
                     const y = part.y - 1 < 0 ? cellsCount - 1 : part.y - 1;
 
@@ -161,13 +161,13 @@ function App() {
         }
 
         const movePlayer = () => {
-            if (!playerState.isFruitEaten && detectCollision()) {
+            if (!playerState.current.isFruitEaten && detectCollision()) {
                 return endGame();
             }
 
-            playerState = {
-                ...playerState,
-                parts: playerState.parts.map((part, index, parts) => {
+            playerState.current = {
+                ...playerState.current,
+                parts: playerState.current.parts.map((part, index, parts) => {
                     const isHead = index === 0;
 
                     if (isHead) {
@@ -179,48 +179,48 @@ function App() {
                         y: parts[index - 1].y
                     }
                 })
-            }
+            };
         }
 
         const updatePlayerPoints = () => {
-            playerState = {
-                ...playerState,
-                parts: [...playerState.parts],
-            }
+            playerState.current = {
+                ...playerState.current,
+                parts: [...playerState.current.parts],
+            };
 
             setPoints((points) => points + 5);
         }
 
         const drawFruit = () => {
-            const {x, y} = gameState.fruitPosition;
+            const {x, y} = gameState.current.fruitPosition;
 
             canvasContext.fillStyle = 'green';
             canvasContext.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         }
 
         const updatePlayerParts = () => {
-            const {x, y} = playerState.parts[playerState.parts.length - 1];
+            const {x, y} = playerState.current.parts[playerState.current.parts.length - 1];
 
-            playerState = {
-                ...playerState,
+            playerState.current = {
+                ...playerState.current,
                 parts: [
-                    ...playerState.parts,
+                    ...playerState.current.parts,
                     {
                         x,
                         y
                     }
                 ]
-            }
+            };
         }
 
         const eatFruit = () => {
-            const [head] = playerState.parts;
-            const {x, y} = gameState.fruitPosition;
+            const [head] = playerState.current.parts;
+            const {x, y} = gameState.current.fruitPosition;
 
             if (head.x !== x || head.y !== y) {
-                playerState = {
-                    ...playerState,
-                    parts: [...playerState.parts],
+                playerState.current = {
+                    ...playerState.current,
+                    parts: [...playerState.current.parts],
                     isFruitEaten: false
                 };
                 return;
@@ -230,9 +230,9 @@ function App() {
             updatePlayerPoints();
             updatePlayerParts();
 
-            playerState = {
-                ...playerState,
-                parts: [...playerState.parts],
+            playerState.current = {
+                ...playerState.current,
+                parts: [...playerState.current.parts],
                 isFruitEaten: true
             };
         }
@@ -248,7 +248,7 @@ function App() {
             movePlayer();
             eatFruit();
 
-            if (gameState.isEnd) {
+            if (gameState.current.isEnd) {
                 canvasContext.clearRect(0, 0, gridSize, gridSize);
                 setShowEnd(true);
                 return;
@@ -260,7 +260,7 @@ function App() {
         }
 
         loop();
-    }
+    };
 
     useEffect(() => {
         listenForKeyboardEvents();
@@ -274,7 +274,7 @@ function App() {
             clearTimeout(timeoutId.current);
             document.removeEventListener('keydown', handleKeyDown);
         }
-    }, [showEnd]);
+    }, [showEnd, game]);
 
     const handleReset = () => {
         setPoints(0);
@@ -308,14 +308,14 @@ function App() {
     }
 
     return (
-        <div style={{ marginTop: "4rem", padding: "0 2rem", display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
+        <div className="container">
             <h1 style={{ margin: 0, textTransform: 'uppercase' }}>Snake</h1>
 
             <p>Manuel è un figo (w l'Armenia)</p>
 
             {!showEnd && (
-                <p className="points">
-                    Player points: <strong>{points}</strong>
+                <p>
+                    Punti: <strong>{points}</strong>
                 </p>
             )}
 

@@ -2,22 +2,32 @@ html {
     font-size: 62.5%;
 }
 
+p {
+    margin: 0;
+}
+
 body {
     font-size: 1.6rem;
     font-family: Verdana, sans-serif;
-}
-
-.points {
-    margin-bottom: 4rem;
 }
 
 canvas {
     border: 1rem solid rebeccapurple;
 }
 
+.container {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding: 0 2rem;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
 .mobile-buttons {
     display: grid;
-    margin-top: 4rem;
+    margin-top: 2rem;
     gap: 1rem;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(2, 5rem);
@@ -29,14 +39,10 @@ canvas {
 
 .button {
     min-width: 8rem;
-    border: .2rem solid rebeccapurple;
+    color: white;
+    border: none;
     border-radius: .2rem;
-    background-color: white;
-
-    &:hover, &:active {
-        background-color: lightgray;
-    }
-
+    background-color: rebeccapurple;
 }
 
 #up {
